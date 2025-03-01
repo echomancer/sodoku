@@ -7,28 +7,114 @@
 
 <table>
     <tbody>
-        @for (int i = 0; i < MaxSize; i++)
+        @for (int i = 0; i < sodokuBoard.MaxSize; i++)
         {
             <tr>
-            @for (int j = 0; j < MaxSize; j++)
+            @for (int j = 0; j < sodokuBoard.MaxSize; j++)
             {
-                var localCell = Board[i,j];
                 var iCopy = i;
                 var jCopy = j;
+                var index = i + j;
+                var localCell = sodokuBoard.FlatBoard[index];
+                if (localCell == null) {
+                    var quadrant = i / sodokuBoard.MaxSize + j / sodokuBoard.MaxSize;
+                    sodokuBoard.FlatBoard[index] = new SodokuCell(i, j, quadrant);
+                    localCell = sodokuBoard.FlatBoard[index];
+                }
                 <td>
-                    <input id="@($"Board{i}{j}")" value="@Board[i,j]" type="number" min="0" max="9" step="1" @onchange="@(e => EventUpdateBoard(e, iCopy, jCopy))" @onblur="@(f => FocusUpdateBoard(f, iCopy, jCopy))"/>
+                    <input 
+                        id="@($"Board{i}{j}")"
+                        type="number" min="0" max="9" step="1"
+                        @bind-value:event="onInput"
+                        @bind-value="sodokuBoard.FlatBoard[index].Value"
+                    />
                 </td>
             }
             </tr>
         }
     </tbody>
 </table>
-
+<hr/>
 <button class="btn btn-primary" @onclick="ClearBoard">Clear Board</button>
 <button class="btn btn-primary" @onclick="LockBoard">Lock Board</button>
 <button class="btn btn-primary" @onclick="SolveBoard">Solve Board</button>
 
 @code {
+    public class SodokuBoard
+    {
+        public int MaxSize = 9;
+        public int[,] Board { get; set; } = new int[9,9];
+        public SodokuCell[] FlatBoard { get; set; } = new SodokuCell[81];
+        public SodokuCell[,] Cells { get; set; } = new SodokuCell[9,9];
+        public async Task EventUpdateBoard(ChangeEventArgs e, int row, int column)
+        {
+            if (e.Value != null) {
+                if (e.Value.ToString() != null) {
+                    int value = Int32.Parse(e.Value.ToString());
+                    Boolean changed = UpdateBoard(value, row, column);
+                    if (!changed) {
+                        var tempValue = Board[row,column];
+                        Board[row,column] = 0;
+                        await Task.Yield();
+                        Board[row,column] = tempValue;
+                    }
+                }
+            }
+        }
+
+        public async Task FocusUpdateBoard(FocusEventArgs f, int row, int column)
+        {
+            if(f.ToString() != null) {
+                int value = Int32.Parse(f.ToString());
+                Boolean changed = UpdateBoard(value, row, column);
+                if (!changed) {
+                    var tempValue = Board[row,column];
+                    Board[row,column] = 0;
+                    await Task.Yield();
+                    Board[row,column] = tempValue;
+                }
+            }
+        }
+
+        public Boolean UpdateBoard(int value, int row, int column)
+        {
+            Boolean changed = false;
+            int oldValue = Board[row,column];
+            FlatBoard[row+column].Value = value;
+            if (!ValidateBoard()) {
+                FlatBoard[row+column].Value = oldValue;
+            } else {
+                Board[row,column] = value;
+                Cells[row,column].Value = value;
+                changed = true;
+            }
+            return changed;
+        }
+
+        public Boolean ValidateBoard()
+        {
+            Boolean isValid = false;
+            for (int i = 0; i < MaxSize; i++) {
+                for (int j = 0; j < MaxSize; j++) {
+
+                }
+            }
+            return isValid;
+        }
+
+        public SodokuBoard(int size)
+        {
+            this.MaxSize = size * size;
+            for (int i = 0; i < MaxSize; i++) {
+                for (int j = 0; j < MaxSize; j++) {
+                    int quadrant = i / MaxSize + j / MaxSize;
+                    Cells[i,j] = new SodokuCell(i, j, quadrant);
+                    Board[i,j] = 0;
+                    FlatBoard[i+j] = Cells[i,j];
+                }
+            }
+        }
+    }
     public class SodokuCell
     {
         public int Value { get; set; } = 0;
@@ -37,80 +123,23 @@
         public int Row { get; set; } = -1;
         public int Column { get; set; } = -1;
         public Boolean Locked { get; set; } = false;
-        public List<int> PossibleValues { get; set; }
-        public List<int> ImpossibleValues { get; set; }
         public SodokuCell(int row, int column, int quadrant)
         {
             this.Row = row;
             this.Column = column;
             this.Quadrant = quadrant;
-            this.PossibleValues = new List<int>();
-            this.ImpossibleValues = new List<int>();
         }
         public SodokuCell()
         {
-            this.PossibleValues = new List<int>();
-            this.ImpossibleValues = new List<int>();
         }
     }
     [Parameter]
     public int Size { get; set; } = 3;
-    public int MaxSize = 9;
-    public int[,] Board { get; set; } = new int[9,9];
-
-    public SodokuCell[,] Cells { get; set; } = new SodokuCell[9,9];
+    public SodokuBoard sodokuBoard = new SodokuBoard(3);
 
     private void ClearBoard()
     {
-        Size = 3;
-        MaxSize = Size * Size;
-        for (int i = 0; i < MaxSize; i++) {
-            for (int j = 0; j < MaxSize; j++) {
-                int quadrant = i / MaxSize + j / MaxSize;
-                Cells[i,j] = new SodokuCell(i, j, quadrant);
-                Board[i,j] = 0;
-            }
-        }
-    }
-
-    private void EventUpdateBoard(ChangeEventArgs e, int row, int column)
-    {
-        if (e.Value != null) {
-            if (e.Value.ToString() != null) {
-                int value = Int32.Parse(e.Value.ToString());
-                UpdateBoard(value, row, column);
-            }
-        }
-    }
-
-    private void FocusUpdateBoard(FocusEventArgs f, int row, int column)
-    {
-        if(f.ToString() != null) {
-            int value = Int32.Parse(f.ToString());
-            UpdateBoard(value, row, column);
-        }
-    }
-
-    private void UpdateBoard(int value, int row, int column)
-    {
-        int oldValue = Board[row,column];
-        Board[row,column] = value;
-        if (!ValidateBoard()) {
-            Board[row,column] = oldValue;
-        } else {
-            Cells[row,column].Value = value;
-        }
-    }
-
-    private Boolean ValidateBoard()
-    {
-        Boolean isValid = false;
-        for (int i = 0; i < MaxSize; i++) {
-            for (int j = 0; j < MaxSize; j++) {
-
-            }
-        }
-        return isValid;
+        sodokuBoard = new SodokuBoard(Size);
     }
 
     private void LockBoard()
