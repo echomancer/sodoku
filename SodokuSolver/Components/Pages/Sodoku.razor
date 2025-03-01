@@ -16,7 +16,7 @@
                 var iCopy = i;
                 var jCopy = j;
                 <td>
-                    <input id="@($"Board{i}{j}")" value="@[i,j]" type="number" min="0" max="9" step="1" @onchange="@(e => EventUpdateBoard(e, iCopy, jCopy))" @onblur="@(f => FocusUpdateBoard(f, iCopy, jCopy))"/>
+                    <input id="@($"Board{i}{j}")" value="@Board[i,j]" type="number" min="0" max="9" step="1" @onchange="@(e => EventUpdateBoard(e, iCopy, jCopy))" @onblur="@(f => FocusUpdateBoard(f, iCopy, jCopy))"/>
                 </td>
             }
             </tr>
