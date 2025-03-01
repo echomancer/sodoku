@@ -1,0 +1,125 @@
+@page "/sodoku"
+@rendermode InteractiveServer
+
+<PageTitle>Sodoku Solver</PageTitle>
+
+<h1>Sodoku Solver</h1>
+
+<table>
+    <tbody>
+        @for (int i = 0; i < MaxSize; i++)
+        {
+            <tr>
+            @for (int j = 0; j < MaxSize; j++)
+            {
+                var localCell = Board[i,j];
+                var iCopy = i;
+                var jCopy = j;
+                <td>
+                    <input id="@($"Board{i}{j}")" value="@[i,j]" type="number" min="0" max="9" step="1" @onchange="@(e => EventUpdateBoard(e, iCopy, jCopy))" @onblur="@(f => FocusUpdateBoard(f, iCopy, jCopy))"/>
+                </td>
+            }
+            </tr>
+        }
+    </tbody>
+</table>
+
+<button class="btn btn-primary" @onclick="ClearBoard">Clear Board</button>
+<button class="btn btn-primary" @onclick="LockBoard">Lock Board</button>
+<button class="btn btn-primary" @onclick="SolveBoard">Solve Board</button>
+
+@code {
+    public class SodokuCell
+    {
+        public int Value { get; set; } = 0;
+        public int Guess { get; set; } = 0;
+        public int Quadrant { get; set; } = 0;
+        public int Row { get; set; } = -1;
+        public int Column { get; set; } = -1;
+        public Boolean Locked { get; set; } = false;
+        public List<int> PossibleValues { get; set; }
+        public List<int> ImpossibleValues { get; set; }
+        public SodokuCell(int row, int column, int quadrant)
+        {
+            this.Row = row;
+            this.Column = column;
+            this.Quadrant = quadrant;
+            this.PossibleValues = new List<int>();
+            this.ImpossibleValues = new List<int>();
+        }
+        public SodokuCell()
+        {
+            this.PossibleValues = new List<int>();
+            this.ImpossibleValues = new List<int>();
+        }
+    }
+    [Parameter]
+    public int Size { get; set; } = 3;
+    public int MaxSize = 9;
+    public int[,] Board { get; set; } = new int[9,9];
+
+    public SodokuCell[,] Cells { get; set; } = new SodokuCell[9,9];
+
+    private void ClearBoard()
+    {
+        Size = 3;
+        MaxSize = Size * Size;
+        for (int i = 0; i < MaxSize; i++) {
+            for (int j = 0; j < MaxSize; j++) {
+                int quadrant = i / MaxSize + j / MaxSize;
+                Cells[i,j] = new SodokuCell(i, j, quadrant);
+                Board[i,j] = 0;
+            }
+        }
+    }
+
+    private void EventUpdateBoard(ChangeEventArgs e, int row, int column)
+    {
+        if (e.Value != null) {
+            if (e.Value.ToString() != null) {
+                int value = Int32.Parse(e.Value.ToString());
+                UpdateBoard(value, row, column);
+            }
+        }
+    }
+
+    private void FocusUpdateBoard(FocusEventArgs f, int row, int column)
+    {
+        if(f.ToString() != null) {
+            int value = Int32.Parse(f.ToString());
+            UpdateBoard(value, row, column);
+        }
+    }
+
+    private void UpdateBoard(int value, int row, int column)
+    {
+        int oldValue = Board[row,column];
+        Board[row,column] = value;
+        if (!ValidateBoard()) {
+            Board[row,column] = oldValue;
+        } else {
+            Cells[row,column].Value = value;
+        }
+    }
+
+    private Boolean ValidateBoard()
+    {
+        Boolean isValid = false;
+        for (int i = 0; i < MaxSize; i++) {
+            for (int j = 0; j < MaxSize; j++) {
+
+            }
+        }
+        return isValid;
+    }
+
+    private void LockBoard()
+    {
+
+    }
+
+    private void SolveBoard()
+    {
+
+    }
+}
