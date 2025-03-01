@@ -5,15 +5,41 @@
 
 <h1>Counter</h1>
 
-<p role="status">Current count: @currentCount</p>
+<div>
+    <p role="status">Current increment: @currentIncrement</p>
+    <p role="status">Current count: @currentCount</p>
+    <InputNumber @bind-Value="currentIncrement" @onchange="SetCount" @onblur="SetCount"/>
+</div>
+<div>
+    <hr/>
+</div>
+<div>
+    <button class="btn btn-primary" @onclick="IncrementCount">Increment</button>
+    <button class="btn btn-primary" @onclick="ResetIncrement">Clear</button>
+</div>
 
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
 
 @code {
-    private int currentCount = 0;
+    private double currentCount = 0;
+    private int currentIncrement = 0;
+
+    [Parameter]
+    public double IncrementAmount { get; set; } = 1;
+
+    private void SetCount()
+    {
+        currentCount = currentIncrement * IncrementAmount;
+    }
 
     private void IncrementCount()
     {
-        currentCount++;
+        currentIncrement++;
+        SetCount();
+    }
+
+    private void ResetIncrement()
+    {
+        currentIncrement = 0;
+        currentCount = 0;
     }
 }
